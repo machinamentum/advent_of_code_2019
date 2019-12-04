@@ -1,0 +1,41 @@
+#import "Basic";
+
+struct C {
+    #clang_import "#include <stdlib.h>\n#include <stdio.h>";
+}
+
+func get_fuel_for_module(module_mass: double) -> double {
+    // Cast to int64 as a cheap floor()
+    var i = cast(int64) (module_mass / 3);
+    var result = cast(double) (i - 2);
+
+    if (result < 0) return 0;
+    return result;
+}
+
+func get_fuel_for_fuel(fuel: double) -> double {
+    var need = get_fuel_for_module(fuel);
+    if need > 0 return get_fuel_for_fuel(need) + need;
+
+    return 0;
+}
+
+func main() {
+    var accum: double;
+    // Assume we're running as a metaprogram in the AoC root directory
+    var input_string = read_entire_file("day1/input.txt");
+    var lines = get_lines(input_string);
+
+    for lines {
+        var mass = C.atof(cast() to_c_string(it));
+
+        // C.printf("Mass: %f\n", mass);
+
+        var fuel = get_fuel_for_module(mass);
+        fuel += get_fuel_for_fuel(fuel);
+        // C.printf("F: %f\n", fuel);
+        accum += fuel;
+    }
+
+    C.printf("Fuel: %f\n", accum);
+}
