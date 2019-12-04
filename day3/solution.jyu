@@ -1,0 +1,145 @@
+#import "Basic";
+#import "Array";
+
+struct C {
+    #clang_import "#include <stdlib.h>\n#include <stdio.h>";
+}
+
+struct Vec {
+    var x: int;
+    var y: int;
+
+    func taxicab_dist(v1: Vec, v2: Vec) -> int {
+        var x = v1.x - v2.x;
+        if x < 0 x = -x;
+
+        var y = v1.y - v2.y;
+        if y < 0 y = -y;
+
+        return x + y;
+    }
+}
+
+func main() {
+    var input_string = read_entire_file("day3/input.txt");
+
+    var splits = split(input_string, '\n');
+    var wire1_string = splits[0];
+    var wire2_string = splits[1];
+
+    var wire1 = split(wire1_string, ',');
+    var wire2 = split(wire2_string, ',');
+
+    C.printf("wire1: %d\n", wire1.count);
+    C.printf("wire2: %d\n", wire2.count);
+
+    var center: Vec;
+    var w1_pos: Vec;
+    var w2_pos: Vec;
+    var w1_positions: [..] Vec;
+    var w2_positions: [..] Vec;
+
+    var w1_steps: [..] int;
+    var w2_steps: [..] int;
+
+    var w1_step_count: int;
+    var w2_step_count: int;
+    for wire1 {
+        var w1 = it;
+        var dir = w1[0];
+        advance(*w1, 1);
+
+        var move = C.atoi(cast() to_c_string(w1));
+
+        var dir_vec: Vec;
+        if dir == 'R' {
+            dir_vec.x += 1;
+        } else if dir == 'L' {
+            dir_vec.x -= 1;
+        } else if dir == 'U' {
+            dir_vec.y += 1;
+        } else if dir == 'D' {
+            dir_vec.y -= 1;
+        }
+
+        for 0..<move {
+            array_add(*w1_positions, w1_pos);
+            array_add(*w1_steps, w1_step_count);
+            w1_pos.x += dir_vec.x;
+            w1_pos.y += dir_vec.y;
+            w1_step_count += 1;
+        }
+    }
+
+    for wire2 {
+        var w2 = it;
+        var dir = w2[0];
+        advance(*w2, 1);
+
+        var move = C.atoi(cast() to_c_string(w2));
+
+        var dir_vec: Vec;
+        if dir == 'R' {
+            dir_vec.x += 1;
+        } else if dir == 'L' {
+            dir_vec.x -= 1;
+        } else if dir == 'U' {
+            dir_vec.y += 1;
+        } else if dir == 'D' {
+            dir_vec.y -= 1;
+        }
+
+        for 0..<move {
+            array_add(*w2_positions, w2_pos);
+            array_add(*w2_steps, w2_step_count);
+            w2_pos.x += dir_vec.x;
+            w2_pos.y += dir_vec.y;
+            w2_step_count += 1;
+        }
+    }
+
+    var smallest_dist: int = 10000000;
+
+    // Smallest dist, this can take quite a bit of time.
+    for w1_positions {
+        var w1 = it;
+
+        for w2_positions {
+            var w2 = it;
+
+            if w1.x == w2.x && w1.y == w2.y {
+                var dist = w1.taxicab_dist(center);
+                if (dist) {
+                    C.printf("Dist: %d\n", dist);
+                    if dist < smallest_dist smallest_dist = dist;
+                }
+            }
+        }
+    }
+
+    C.printf("Smallest distance: %d\n", smallest_dist);
+
+    var smallest_number_of_steps = 10000;
+    for w1_positions {
+        var w1 = it;
+        var w1_index = it_index;
+
+        if (it_index == 0) continue;
+
+        for w2_positions {
+            var w2 = it;
+            var w2_index = it_index;
+
+            if (it_index == 0) continue;
+
+            if w1.x == w2.x && w1.y == w2.y {
+                var steps = w1_steps[w1_index] + w2_steps[w2_index];
+                C.printf("collision: %d\n", steps);
+
+                if steps < smallest_number_of_steps smallest_number_of_steps = steps;
+            }
+        }
+    }
+
+    C.printf("Smallest number of steps to a collision: %d\n", smallest_number_of_steps);
+}

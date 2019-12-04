@@ -25,4 +25,8 @@ func @metaprogram main() {
     var as_metaprogram = true;
 
     compile_single_test_file("day1/solution.jyu", as_metaprogram);
+    compile_single_test_file("day2/solution.jyu", as_metaprogram);
+
+    // Just compile day3, running it can take a long while.
+    compile_single_test_file("day3/solution.jyu", false);
 }
