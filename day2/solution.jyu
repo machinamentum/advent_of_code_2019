@@ -1,0 +1,67 @@
+#import "Basic";
+#import "Array";
+
+struct C {
+    #clang_import "#include <stdlib.h>\n#include <stdio.h>";
+}
+
+let NOUN_POS = 1;
+let VERB_POS = 2;
+
+func main() {
+    var input_string = read_entire_file("day2/input.txt");
+    var input_strings = split(input_string, ',');
+
+    var noun: int64 = 0;
+    var verb: int64 = 0;
+    var did_noun_last = false;
+    for 0..<input_strings.count {
+        noun = it;
+
+        for 0..<input_strings.count {
+            verb = it;
+            var positions: [..] int64;
+            for input_strings {
+                array_add(*positions, C.atoi(cast() to_c_string(it)));
+            }
+
+            // Patch the program positions according to the instructions
+            positions[NOUN_POS] = noun;
+            positions[VERB_POS] = verb;
+
+            var pc = 0;
+            while true {
+                var code = positions[pc];
+                if code == 99 break;
+
+                if code == 1 {
+                    var src1 = positions[pc + 1];
+                    var src2 = positions[pc + 2];
+                    var dst  = positions[pc + 3];
+
+                    positions[dst] = positions[src1] + positions[src2];
+                    pc += 4;
+                    continue;
+                }
+
+                if code == 2 {
+                    var src1 = positions[pc + 1];
+                    var src2 = positions[pc + 2];
+                    var dst  = positions[pc + 3];
+
+                    positions[dst] = positions[src1] * positions[src2];
+                    pc += 4;
+                    continue;
+                }
+
+                C.printf("Unknown opcode: %d, at position: %d\n", code, pc);
+                break;
+            }
+
+            if positions[0] == 19690720 {
+                C.printf("noun: %d, verb: %d, 100*noun + verb=%d\n", noun, verb, 100*noun + verb);
+                return;
+            }
+        }
+    }
+}
