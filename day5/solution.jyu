@@ -1,0 +1,139 @@
+#import "Basic";
+#import "Array";
+
+struct C {
+    #clang_import "#include <stdlib.h>\n#include <stdio.h>";
+}
+
+let NOUN_POS = 1;
+let VERB_POS = 2;
+
+func get_param(program: [] int64, in: int64, mode: int64) -> int64 {
+    if mode == 0 return program[in];
+    if mode == 1 return in;
+
+    return -1;
+}
+
+func run_intcode(program: [] int64) -> int64 {
+    var pc: int64 = 0;
+    while true {
+        var code = program[pc];
+
+        var opcode = (code / 1    ) % 100;
+        var p1mode = (code / 100  ) % 10;
+        var p2mode = (code / 1000 ) % 10;
+        var p3mode = (code / 10000) % 10;
+
+        if code == 99 break;
+
+        if opcode == 1 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+            var dst  = program[pc + 3];
+
+            program[dst] = get_param(program, src1, p1mode) + get_param(program, src2, p2mode);
+            pc += 4;
+           continue;
+        }
+
+        if opcode == 2 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+            var dst  = program[pc + 3];
+
+            program[dst] = get_param(program, src1, p1mode) * get_param(program, src2, p2mode);
+            pc += 4;
+            continue;
+        }
+
+        if opcode == 3 {
+            var input: int32;
+            C.printf("Input: ");
+            C.scanf("%d", *input);
+
+            var dst = program[pc + 1];
+            program[dst] = input;
+            pc += 2;
+            continue;
+        }
+
+        if opcode == 4 {
+            var src1 = program[pc + 1];
+            var output = get_param(program, src1, p1mode);
+            C.printf("%d\n", output);
+            pc += 2;
+            continue;
+        }
+
+        if opcode == 5 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+
+            if get_param(program, src1, p1mode) != 0 {
+                pc = get_param(program, src2, p2mode);
+            } else {
+                pc += 3;
+            }
+            continue;
+        }
+
+        if opcode == 6 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+
+            if get_param(program, src1, p1mode) == 0 {
+                pc = get_param(program, src2, p2mode);
+            } else {
+                pc += 3;
+            }
+            continue;
+        }
+
+        if opcode == 7 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+            var dst  = program[pc + 3];
+
+            if get_param(program, src1, p1mode) < get_param(program, src2, p2mode) {
+                program[dst] = 1;
+            } else {
+                program[dst] = 0;
+            }
+
+            pc += 4;
+            continue;
+        }
+
+        if opcode == 8 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+            var dst  = program[pc + 3];
+
+            if get_param(program, src1, p1mode) == get_param(program, src2, p2mode) {
+                program[dst] = 1;
+            } else {
+                program[dst] = 0;
+            }
+
+            pc += 4;
+            continue;
+        }
+
+        C.printf("Unknown opcode: %d, at position: %d\n", code, pc);
+        break;
+    }
+    return program[0];
+}
+
+func main() {
+    var input_string = read_entire_file("day5/input.txt");
+    var input_strings = split(input_string, ',');
+
+    var positions: [..] int64;
+    for input_strings {
+        array_add(*positions, C.atoi(cast() to_c_string(it)));
+    }
+
+    var result = run_intcode(get_slice(positions));
+}
