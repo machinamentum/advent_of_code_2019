@@ -1,0 +1,115 @@
+#import "Basic";
+#import "Array";
+
+struct C {
+    #clang_import "#include <stdio.h>\n#include <stdlib.h>";
+}
+
+struct Node {
+    var parent: *Node;
+
+    var children: [..] *Node;
+}
+
+
+struct Pair {
+    var name: string;
+    var node: *Node;
+}
+var node_map: [..] Pair;
+func find(name: string) -> *Node {
+    for node_map {
+        if it.name == name return it.node;
+    }
+
+    return null;
+}
+
+func add(name: string, node: *Node) -> *Node {
+    assert(find(name) == null);
+
+    var pair: Pair;
+    pair.name = name;
+    pair.node = node;
+    array_add(*node_map, pair);
+
+    return node;
+}
+
+func get_orbits_of_node(node: *Node) -> int {
+    var parent = node.parent;
+    var tally = 0;
+    while (parent != null) {
+        tally += 1;
+        parent = parent.parent;
+    }
+
+    return tally;
+}
+
+func get_orbital_transfers(from: string, to: string) -> int {
+    var src = find(from);
+    var dst = find(to);
+
+    var srcp = src.parent;
+
+    var num_src_transfers = 0;
+    while srcp != null {
+        var num_dst_transfers = 0;
+        var dstp = dst.parent;
+        while dstp != null {
+            // C.printf("srcp, dstp %p, %p\n", srcp, dstp);
+            if srcp == dstp {
+                return num_src_transfers + num_dst_transfers;
+            }
+
+            num_dst_transfers += 1;
+            dstp = dstp.parent;
+        }
+
+        srcp = srcp.parent;
+        num_src_transfers += 1;
+       // C.printf("srcp, dstp %p, %p\n", srcp, dstp);
+    }
+
+    return -1;
+}
+
+func main() {
+    var input_string = read_entire_file("day6/input.txt");
+    var lines = get_lines(input_string);
+
+    for lines {
+        var spl = split(it, ')');
+        if spl.count < 2 continue;
+
+        var parent = find(spl[0]);
+        var child  = find(spl[1]);
+
+        if parent == null {
+            var node: Node;
+            parent = add(spl[0], New(node));
+        }
+
+        if child == null {
+            var node: Node;
+            child = add(spl[1], New(node));
+        }
+
+        array_add(*parent.children, child);
+        child.parent = parent;
+    }
+
+    C.free(input_string.data);
+    C.free(lines.data);
+
+    var COM = find("COM");
+
+    var orbits: int = 0;
+    for node_map {
+        orbits += get_orbits_of_node(it.node);
+    }
+    C.printf("Orbits: %d\n", orbits);
+    C.printf("Num of transfers from YOU to SAN: %d\n", get_orbital_transfers("YOU", "SAN"));
+}
+

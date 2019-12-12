@@ -31,4 +31,6 @@ func @metaprogram main() {
     compile_single_test_file("day4/solution.jyu", as_metaprogram);
     // Just compile day5 because it does a scanf, which halts until the user inputs a number.
     compile_single_test_file("day5/solution.jyu", false);
+
+    compile_single_test_file("day6/solution.jyu", as_metaprogram);
 }
