@@ -31,7 +31,7 @@ func add(name: string, node: *Node) -> *Node {
     var pair: Pair;
     pair.name = name;
     pair.node = node;
-    array_add(*node_map, pair);
+    node_map.add(pair);
 
     return node;
 }
@@ -96,7 +96,7 @@ func main() {
             child = add(spl[1], New(node));
         }
 
-        array_add(*parent.children, child);
+        parent.children.add(child);
         child.parent = parent;
     }
 

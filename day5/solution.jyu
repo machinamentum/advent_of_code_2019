@@ -132,7 +132,7 @@ func main() {
 
     var positions: [..] int64;
     for input_strings {
-        array_add(*positions, C.atoi(cast() to_c_string(it)));
+        positions.add(C.atoi(cast() to_c_string(it)));
     }
 
     var result = run_intcode(get_slice(positions));

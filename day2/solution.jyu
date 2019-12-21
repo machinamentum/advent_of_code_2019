@@ -22,7 +22,7 @@ func main() {
             verb = it;
             var positions: [..] int64;
             for input_strings {
-                array_add(*positions, C.atoi(cast() to_c_string(it)));
+                positions.add(C.atoi(cast() to_c_string(it)));
             }
 
             // Patch the program positions according to the instructions

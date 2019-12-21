@@ -21,7 +21,27 @@ func compile_single_test_file(path: string, as_metaprogram: bool) {
     }
 }
 
-func @metaprogram main() {
+func concatenate(n: string, m: string) -> string {
+    var builder: String_Builder;
+    builder.init();
+    builder.append(n);
+    builder.append(m);
+    var result = builder.to_string();
+    builder.reset();
+
+    return result;
+}
+
+func @metaprogram main(argc: int32, argv: **uint8) {
+    var did_cmd_line = false;
+    for 0..<argc {
+        var path = concatenate(to_string(argv[it]), "/solution.jyu");
+        compile_single_test_file(path, true);
+        did_cmd_line = true;
+    }
+
+    if did_cmd_line return;
+
     var as_metaprogram = true;
 
     compile_single_test_file("day1/solution.jyu", as_metaprogram);
@@ -33,4 +53,5 @@ func @metaprogram main() {
     compile_single_test_file("day5/solution.jyu", false);
 
     compile_single_test_file("day6/solution.jyu", as_metaprogram);
+    compile_single_test_file("day7/solution.jyu", as_metaprogram);
 }

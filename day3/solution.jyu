@@ -63,8 +63,8 @@ func main() {
         }
 
         for 0..<move {
-            array_add(*w1_positions, w1_pos);
-            array_add(*w1_steps, w1_step_count);
+            w1_positions.add(w1_pos);
+            w1_steps.add(w1_step_count);
             w1_pos.x += dir_vec.x;
             w1_pos.y += dir_vec.y;
             w1_step_count += 1;
@@ -90,8 +90,8 @@ func main() {
         }
 
         for 0..<move {
-            array_add(*w2_positions, w2_pos);
-            array_add(*w2_steps, w2_step_count);
+            w2_positions.add(w2_pos);
+            w2_steps.add(w2_step_count);
             w2_pos.x += dir_vec.x;
             w2_pos.y += dir_vec.y;
             w2_step_count += 1;

@@ -1,0 +1,259 @@
+#import "Basic";
+#import "Array";
+
+struct C {
+    #clang_import "#include <stdlib.h>\n#include <stdio.h>\n#include <string.h>\n";
+}
+
+let NOUN_POS = 1;
+let VERB_POS = 2;
+
+func get_param(program: [] int64, in: int64, mode: int64) -> int64 {
+    if mode == 0 return program[in];
+    if mode == 1 return in;
+
+    return -1;
+}
+
+struct Intcode_State {
+    var memory: [] int64;
+    var has_halted = false;
+    var pc: int64;
+}
+
+func run_intcode(program: [] int64, inputs: [] int64) -> [] int64 {
+    var pc: int64 = 0;
+    var input_cursor = 0;
+    var outputs: [..] int64;
+    while true {
+        var code = program[pc];
+
+        var opcode = (code / 1    ) % 100;
+        var p1mode = (code / 100  ) % 10;
+        var p2mode = (code / 1000 ) % 10;
+        var p3mode = (code / 10000) % 10;
+
+        if code == 99 break;
+
+        if opcode == 1 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+            var dst  = program[pc + 3];
+
+            program[dst] = get_param(program, src1, p1mode) + get_param(program, src2, p2mode);
+            pc += 4;
+           continue;
+        }
+
+        if opcode == 2 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+            var dst  = program[pc + 3];
+
+            program[dst] = get_param(program, src1, p1mode) * get_param(program, src2, p2mode);
+            pc += 4;
+            continue;
+        }
+
+        if opcode == 3 {
+            var input: int64 = inputs[input_cursor];
+            input_cursor += 1;
+
+            var dst = program[pc + 1];
+            program[dst] = input;
+            pc += 2;
+            continue;
+        }
+
+        if opcode == 4 {
+            var src1 = program[pc + 1];
+            var output = get_param(program, src1, p1mode);
+            outputs.add(output);
+            pc += 2;
+            continue;
+        }
+
+        if opcode == 5 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+
+            if get_param(program, src1, p1mode) != 0 {
+                pc = get_param(program, src2, p2mode);
+            } else {
+                pc += 3;
+            }
+            continue;
+        }
+
+        if opcode == 6 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+
+            if get_param(program, src1, p1mode) == 0 {
+                pc = get_param(program, src2, p2mode);
+            } else {
+                pc += 3;
+            }
+            continue;
+        }
+
+        if opcode == 7 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+            var dst  = program[pc + 3];
+
+            if get_param(program, src1, p1mode) < get_param(program, src2, p2mode) {
+                program[dst] = 1;
+            } else {
+                program[dst] = 0;
+            }
+
+            pc += 4;
+            continue;
+        }
+
+        if opcode == 8 {
+            var src1 = program[pc + 1];
+            var src2 = program[pc + 2];
+            var dst  = program[pc + 3];
+
+            if get_param(program, src1, p1mode) == get_param(program, src2, p2mode) {
+                program[dst] = 1;
+            } else {
+                program[dst] = 0;
+            }
+
+            pc += 4;
+            continue;
+        }
+
+        C.printf("Unknown opcode: %d, at position: %d\n", code, pc);
+        break;
+    }
+    return get_slice(outputs);
+}
+
+func copy_array<T>(arr: [..] T) -> [..] T {
+    var out: [..] T;
+    for arr {
+        out.add(it);
+    }
+
+    return out;
+}
+
+func copy_array<T>(arr: [] T) -> [] T {
+    var memory = C.malloc(cast(C.size_t) (arr.count * sizeof(T)));
+
+    C.memcpy(memory, arr.data, cast(C.size_t) (arr.count * sizeof(T)));
+    var out: [] T;
+    out.data = cast() memory;
+    out.count = arr.count;
+    return out;
+}
+
+func run_with_phase_settings(memory: [..] int64, settings: [5] int64) -> int64 {
+    for 0..<settings.count {
+        var L = it;
+
+        for 0..<settings.count {
+            var R = it;
+
+            if L == R continue;
+
+            if settings[L] == settings[R] {
+                return -1;
+            }
+        }
+    }
+
+//     C.printf("%lld, %lld, %lld, %lld, %lld\n", settings[0], settings[1], settings[2], settings[3], settings[4]);
+
+    var A = settings[0];
+    var B = settings[1];
+    var _C = settings[2];
+    var D = settings[3];
+    var E = settings[4];
+
+    var initial_input: [..] int64;
+    initial_input.add(A); // phase setting
+    initial_input.add(0);
+    var results: [] int64 = get_slice(initial_input);
+
+    var copy = copy_array(get_slice(memory));
+    results = run_intcode(copy_array(copy), results); // A
+
+    initial_input.reset();
+    initial_input.add(B); // phase setting
+    for results initial_input.add(it);
+    results = get_slice(initial_input);
+
+    results = run_intcode(copy_array(copy), results); // B
+
+    initial_input.reset();
+    initial_input.add(_C); // phase setting
+    for results initial_input.add(it);
+    results = get_slice(initial_input);
+
+    results = run_intcode(copy_array(copy), results); // C
+
+    initial_input.reset();
+    initial_input.add(D); // phase setting
+    for results initial_input.add(it);
+    results = get_slice(initial_input);
+
+    results = run_intcode(copy_array(copy), results); // D
+
+    initial_input.reset();
+    initial_input.add(E); // phase setting
+    for results initial_input.add(it);
+    results = get_slice(initial_input);
+
+    results = run_intcode(copy_array(copy), results); // E
+
+    assert(results.count == 1);
+    return results[0];
+}
+
+func main() {
+    var arr: [..] int64;
+    arr.add(1);
+
+    var input_string = read_entire_file("day7/input.txt");
+    var input_strings = split(input_string, ',');
+
+    var positions: [..] int64;
+    for input_strings {
+        positions.add(cast(int64) C.atoi(cast() to_c_string(it)));
+    }
+
+    var largest_output: int64 = 0;
+    var phase_settings: [5] int64;
+
+    for 0..4 {
+        phase_settings[0] = it;
+
+        for 0..4 {
+            phase_settings[1] = it;
+
+            for 0..4 {
+                phase_settings[2] = it;
+
+                for 0..4 {
+                    phase_settings[3] = it;
+
+                    for 0..4 {
+                        phase_settings[4] = it;
+
+                        var res = run_with_phase_settings(positions, phase_settings);
+                        if res > largest_output {
+                            largest_output = res;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    C.printf("Largest: %lld\n", largest_output);
+}
